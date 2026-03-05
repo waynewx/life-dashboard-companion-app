@@ -97,46 +97,191 @@ cd life-dashboard-companion-app
 ## Webhook Payload Format
 
 ### Health Connect
+
+Every Health Connect payload has these top-level fields:
+
 ```json
 {
   "timestamp": "2025-02-05T12:00:00Z",
-  "app_version": "1.0",
+  "app_version": "1.2.0",
   "source": "health_connect",
-  "steps": [
+  "steps": [],
+  "sleep": [],
+  "heart_rate": [],
+  "distance": [],
+  "active_calories": [],
+  "total_calories": [],
+  "weight": [],
+  "height": [],
+  "blood_pressure": [],
+  "blood_glucose": [],
+  "oxygen_saturation": [],
+  "body_temperature": [],
+  "respiratory_rate": [],
+  "resting_heart_rate": [],
+  "exercise": [],
+  "hydration": [],
+  "nutrition": [],
+  "mindfulness": [],
+  "body_fat": [],
+  "lean_body_mass": [],
+  "bone_mass": [],
+  "body_water_mass": [],
+  "heart_rate_variability": []
+}
+```
+
+Only enabled data types are included. Each array contains records with the following fields:
+
+#### Activity
+
+**Steps**
+```json
+{ "count": 1234, "start_time": "2025-02-05T08:00:00Z", "end_time": "2025-02-05T09:00:00Z" }
+```
+
+**Distance**
+```json
+{ "meters": 1523.5, "start_time": "2025-02-05T08:00:00Z", "end_time": "2025-02-05T09:00:00Z" }
+```
+
+**Active Calories**
+```json
+{ "calories": 245.3, "start_time": "2025-02-05T08:00:00Z", "end_time": "2025-02-05T09:00:00Z" }
+```
+
+**Total Calories**
+```json
+{ "calories": 1850.0, "start_time": "2025-02-05T08:00:00Z", "end_time": "2025-02-05T09:00:00Z" }
+```
+
+**Exercise Sessions**
+```json
+{ "type": "running", "start_time": "2025-02-05T07:00:00Z", "end_time": "2025-02-05T08:00:00Z", "duration_seconds": 3600 }
+```
+
+#### Body
+
+**Weight**
+```json
+{ "kilograms": 75.5, "time": "2025-02-05T07:00:00Z" }
+```
+
+**Height**
+```json
+{ "meters": 1.82, "time": "2025-02-05T07:00:00Z" }
+```
+
+**Body Temperature**
+```json
+{ "celsius": 36.6, "time": "2025-02-05T07:00:00Z" }
+```
+
+#### Body Composition
+
+**Body Fat %**
+```json
+{ "percentage": 18.5, "time": "2025-02-05T07:00:00Z" }
+```
+
+**Lean Body Mass**
+```json
+{ "kilograms": 61.5, "time": "2025-02-05T07:00:00Z" }
+```
+
+**Bone Mass**
+```json
+{ "kilograms": 3.2, "time": "2025-02-05T07:00:00Z" }
+```
+
+**Body Water Mass**
+```json
+{ "kilograms": 42.0, "time": "2025-02-05T07:00:00Z" }
+```
+
+#### Vitals
+
+**Heart Rate**
+```json
+{ "bpm": 72, "time": "2025-02-05T10:30:00Z" }
+```
+
+**Resting Heart Rate**
+```json
+{ "bpm": 58, "time": "2025-02-05T07:00:00Z" }
+```
+
+**Heart Rate Variability (HRV)**
+```json
+{ "heart_rate_variability_millis": 42.5, "time": "2025-02-05T07:00:00Z" }
+```
+
+**Blood Pressure**
+```json
+{ "systolic": 120.0, "diastolic": 80.0, "time": "2025-02-05T07:00:00Z" }
+```
+
+**Blood Glucose**
+```json
+{ "mmol_per_liter": 5.5, "time": "2025-02-05T07:00:00Z" }
+```
+
+**Oxygen Saturation**
+```json
+{ "percentage": 98.0, "time": "2025-02-05T07:00:00Z" }
+```
+
+**Respiratory Rate**
+```json
+{ "rate": 16.0, "time": "2025-02-05T07:00:00Z" }
+```
+
+#### Sleep
+
+**Sleep Sessions**
+```json
+{
+  "session_end_time": "2025-02-05T07:30:00Z",
+  "duration_seconds": 28800,
+  "stages": [
     {
-      "count": 1234,
-      "start_time": "2025-02-05T08:00:00Z",
-      "end_time": "2025-02-05T09:00:00Z"
-    }
-  ],
-  "sleep": [
-    {
-      "session_end_time": "2025-02-05T07:30:00Z",
-      "duration_seconds": 28800,
-      "stages": [
-        {
-          "stage": "STAGE_TYPE_DEEP",
-          "start_time": "2025-02-04T23:00:00Z",
-          "end_time": "2025-02-05T01:00:00Z",
-          "duration_seconds": 7200
-        }
-      ]
-    }
-  ],
-  "heart_rate": [
-    {
-      "bpm": 72,
-      "time": "2025-02-05T10:30:00Z"
+      "stage": "STAGE_TYPE_DEEP",
+      "start_time": "2025-02-04T23:00:00Z",
+      "end_time": "2025-02-05T01:00:00Z",
+      "duration_seconds": 7200
     }
   ]
 }
 ```
 
+#### Nutrition
+
+**Hydration**
+```json
+{ "liters": 0.5, "start_time": "2025-02-05T08:00:00Z", "end_time": "2025-02-05T08:00:00Z" }
+```
+
+**Nutrition**
+```json
+{ "calories": 450.0, "protein_grams": 25.0, "carbs_grams": 60.0, "fat_grams": 12.0, "start_time": "2025-02-05T12:00:00Z", "end_time": "2025-02-05T12:30:00Z" }
+```
+
+All nutrition fields (`calories`, `protein_grams`, `carbs_grams`, `fat_grams`) are optional and omitted when not available.
+
+#### Mindfulness
+
+**Mindfulness Sessions**
+```json
+{ "title": "Morning Meditation", "start_time": "2025-02-05T06:00:00Z", "end_time": "2025-02-05T06:15:00Z", "duration_seconds": 900 }
+```
+
+The `title` field is optional and may be `null`.
+
 ### Screen Time
 ```json
 {
   "timestamp": "2025-02-05T12:00:00Z",
-  "app_version": "1.0",
+  "app_version": "1.2.0",
   "device": "Google Pixel 8",
   "source": "screen_time",
   "screen_time": [
