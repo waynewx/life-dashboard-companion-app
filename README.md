@@ -245,7 +245,7 @@ Only enabled data types are included. Each array contains records with the follo
   "duration_seconds": 28800,
   "stages": [
     {
-      "stage": "STAGE_TYPE_DEEP",
+      "stage": "deep",
       "start_time": "2025-02-04T23:00:00Z",
       "end_time": "2025-02-05T01:00:00Z",
       "duration_seconds": 7200
@@ -253,6 +253,8 @@ Only enabled data types are included. Each array contains records with the follo
   ]
 }
 ```
+
+Possible `stage` values: `unknown`, `awake`, `sleeping`, `out_of_bed`, `light`, `deep`, `rem`, `awake_in_bed`.
 
 #### Nutrition
 

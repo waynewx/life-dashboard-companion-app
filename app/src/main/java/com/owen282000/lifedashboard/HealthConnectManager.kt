@@ -341,7 +341,7 @@ class HealthConnectManager(private val context: Context) {
             .map { record ->
                 val stages = record.stages?.map { stage ->
                     SleepStage(
-                        stage = stage.stage.toString(),
+                        stage = sleepStageToString(stage.stage),
                         startTime = stage.startTime,
                         endTime = stage.endTime,
                         duration = Duration.between(stage.startTime, stage.endTime)
@@ -548,6 +548,17 @@ class HealthConnectManager(private val context: Context) {
         }
         val contract = androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()
         return contract.createIntent(context, permissions.toTypedArray())
+    }
+
+    private fun sleepStageToString(stage: Int): String = when (stage) {
+        SleepSessionRecord.STAGE_TYPE_AWAKE -> "awake"
+        SleepSessionRecord.STAGE_TYPE_SLEEPING -> "sleeping"
+        SleepSessionRecord.STAGE_TYPE_OUT_OF_BED -> "out_of_bed"
+        SleepSessionRecord.STAGE_TYPE_LIGHT -> "light"
+        SleepSessionRecord.STAGE_TYPE_DEEP -> "deep"
+        SleepSessionRecord.STAGE_TYPE_REM -> "rem"
+        SleepSessionRecord.STAGE_TYPE_AWAKE_IN_BED -> "awake_in_bed"
+        else -> "unknown"
     }
 
     companion object {
