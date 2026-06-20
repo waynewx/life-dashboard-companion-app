@@ -4,6 +4,16 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Android](https://img.shields.io/badge/Android-14%2B-green.svg)](https://developer.android.com)
 
+## Wayne Fix Fork
+
+This is a personal fork of
+[`owen282000/life-dashboard-companion-app`](https://github.com/owen282000/life-dashboard-companion-app).
+All original credit and the MIT license remain with the upstream project.
+
+This fork adds a focused Health Connect fix for stale or missing Steps/Distance
+exports on transferred devices or partial permission states. See
+[`FORK_NOTICE.md`](FORK_NOTICE.md) for the exact changes and installation caveat.
+
 <p align="center">
   <img src="docs/screenshots/health-connect.png" width="250" alt="Health Connect Screen">
   <img src="docs/screenshots/screen-time.png" width="250" alt="Screen Time Screen">

@@ -114,13 +114,8 @@ fun HealthConnectScreen(
     }
 
     val missingPermissionsForEnabled = remember(enabledDataTypes, grantedPermissionsSet) {
-        enabledDataTypes.mapNotNull { dataType ->
-            val permission = HealthPermission.getReadPermission(dataType.recordClass)
-            if (permission !in grantedPermissionsSet) permission else null
-        }.toSet()
+        HealthConnectManager.getReadPermissionsForTypes(enabledDataTypes) - grantedPermissionsSet
     }
-
-    val hasAtLeastOnePermission = grantedPermissionsSet.isNotEmpty()
 
     Column(
         modifier = Modifier
@@ -150,7 +145,11 @@ fun HealthConnectScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "${enabledDataTypes.size} data types selected",
+                    if (missingPermissionsForEnabled.isEmpty()) {
+                        "${enabledDataTypes.size} data types selected"
+                    } else {
+                        "${enabledDataTypes.size} selected, ${missingPermissionsForEnabled.size} need permission"
+                    },
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.White
                 )
@@ -319,14 +318,14 @@ fun HealthConnectScreen(
                         ) {
                             HealthDataType.entries.forEach { dataType ->
                                 val permission = HealthPermission.getReadPermission(dataType.recordClass)
-                                val isPermissionGranted = permission in grantedPermissionsSet || hasAtLeastOnePermission
+                                val isPermissionGranted = permission in grantedPermissionsSet
 
                                 DataTypeRow(
                                     name = dataType.displayName,
                                     isEnabled = dataType in enabledDataTypes,
                                     isPermissionGranted = isPermissionGranted,
                                     onToggle = { checked ->
-                                        if (!hasAtLeastOnePermission && checked) {
+                                        if (!isPermissionGranted && checked) {
                                             selectedDataTypeForPermission = dataType
                                             showPermissionModal = true
                                         } else {
@@ -590,8 +589,10 @@ fun HealthConnectScreen(
 
                                 val healthConnectManager = HealthConnectManager(context)
                                 val grantedPerms = healthConnectManager.getGrantedPermissions()
-                                if (grantedPerms.isEmpty()) {
-                                    permissionLauncher.launch(HealthConnectManager.ALL_PERMISSIONS)
+                                val missingPerms = HealthConnectManager.getReadPermissionsForTypes(enabledDataTypes) - grantedPerms
+                                if (missingPerms.isNotEmpty()) {
+                                    permissionLauncher.launch(missingPerms)
+                                    syncMessage = "Grant missing Health Connect permissions, then sync again"
                                     isSyncing = false
                                     return@launch
                                 }
@@ -652,6 +653,15 @@ fun HealthConnectScreen(
                         scope.launch {
                             isPreviewing = true
                             try {
+                                val healthConnectManager = HealthConnectManager(context)
+                                val grantedPerms = healthConnectManager.getGrantedPermissions()
+                                val missingPerms = HealthConnectManager.getReadPermissionsForTypes(enabledDataTypes) - grantedPerms
+                                if (missingPerms.isNotEmpty()) {
+                                    permissionLauncher.launch(missingPerms)
+                                    Toast.makeText(context, "Grant missing Health Connect permissions, then preview again", Toast.LENGTH_SHORT).show()
+                                    return@launch
+                                }
+
                                 preferencesManager.setHealthEnabledDataTypes(enabledDataTypes)
                                 val syncManager = HealthSyncManager(context)
                                 val result = syncManager.previewData()
@@ -693,6 +703,15 @@ fun HealthConnectScreen(
                         scope.launch {
                             isExporting = true
                             try {
+                                val healthConnectManager = HealthConnectManager(context)
+                                val grantedPerms = healthConnectManager.getGrantedPermissions()
+                                val missingPerms = HealthConnectManager.getReadPermissionsForTypes(enabledDataTypes) - grantedPerms
+                                if (missingPerms.isNotEmpty()) {
+                                    permissionLauncher.launch(missingPerms)
+                                    Toast.makeText(context, "Grant missing Health Connect permissions, then export again", Toast.LENGTH_SHORT).show()
+                                    return@launch
+                                }
+
                                 preferencesManager.setHealthEnabledDataTypes(enabledDataTypes)
                                 val syncManager = HealthSyncManager(context)
                                 val result = syncManager.previewData()
@@ -879,7 +898,9 @@ fun HealthConnectScreen(
                 confirmButton = {
                     TextButton(
                         onClick = {
-                            val permission = HealthPermission.getReadPermission(selectedDataTypeForPermission!!.recordClass)
+                            val selectedDataType = selectedDataTypeForPermission!!
+                            val permission = HealthPermission.getReadPermission(selectedDataType.recordClass)
+                            enabledDataTypes = enabledDataTypes + selectedDataType
                             permissionLauncher.launch(setOf(permission))
                             showPermissionModal = false
                         }
