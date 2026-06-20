@@ -14,7 +14,7 @@ state or partial permissions can leave Steps and Distance selected in the app UI
 without those exact Health Connect permissions being granted on the current
 device.
 
-Changes in `1.2.2-wayne.1`:
+Changes in `1.2.2-wayne.1` and `1.2.2-wayne.2`:
 
 - Check Health Connect permissions per enabled data type instead of treating any
   granted Health Connect permission as sufficient.
@@ -27,6 +27,11 @@ Changes in `1.2.2-wayne.1`:
 - Use strict incremental filtering after the previous sync timestamp to avoid
   duplicate boundary records.
 - Report the real installed app version in Health Connect webhook payloads.
+- Preserve source package/app metadata for step, distance, active calorie, and
+  total calorie records where Health Connect exposes it.
+- Resend full local-day totals for step, distance, active calorie, and total
+  calorie data so the receiving dashboard does not overwrite daily totals with
+  partial post-sync fragments.
 
 The package name is unchanged from upstream. If your installed app was signed by
 the upstream release key, uninstall the old app before installing this personal

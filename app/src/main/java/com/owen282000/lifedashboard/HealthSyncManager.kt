@@ -238,6 +238,7 @@ class HealthSyncManager(private val context: Context) {
                             put("count", step.count)
                             put("start_time", step.startTime.toString())
                             put("end_time", step.endTime.toString())
+                            putSource(step.source)
                         })
                     }
                 }
@@ -279,6 +280,7 @@ class HealthSyncManager(private val context: Context) {
                         put("meters", it.meters)
                         put("start_time", it.startTime.toString())
                         put("end_time", it.endTime.toString())
+                        putSource(it.source)
                     }) }
                 }
             }
@@ -289,6 +291,7 @@ class HealthSyncManager(private val context: Context) {
                         put("calories", it.calories)
                         put("start_time", it.startTime.toString())
                         put("end_time", it.endTime.toString())
+                        putSource(it.source)
                     }) }
                 }
             }
@@ -299,6 +302,7 @@ class HealthSyncManager(private val context: Context) {
                         put("calories", it.calories)
                         put("start_time", it.startTime.toString())
                         put("end_time", it.endTime.toString())
+                        putSource(it.source)
                     }) }
                 }
             }
@@ -468,6 +472,17 @@ class HealthSyncManager(private val context: Context) {
         }
 
         return json.toString()
+    }
+
+    private fun kotlinx.serialization.json.JsonObjectBuilder.putSource(source: HealthRecordSource?) {
+        source?.packageName?.let { packageName ->
+            put("source_package", packageName)
+            put("sourcePackage", packageName)
+        }
+        source?.appName?.let { appName ->
+            put("source_app", appName)
+            put("sourceApp", appName)
+        }
     }
 
     private fun getAppVersion(): String {

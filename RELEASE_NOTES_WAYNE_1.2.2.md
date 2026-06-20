@@ -1,4 +1,4 @@
-# Life Dashboard Companion 1.2.2-wayne.1
+# Life Dashboard Companion 1.2.2-wayne.2
 
 Personal fix build for Health Connect Steps/Distance export issues seen on
 transferred devices or partial permission states.
@@ -18,6 +18,11 @@ transferred devices or partial permission states.
   to avoid duplicate boundary records.
 - Health Connect webhook payloads now report the installed app version instead
   of the hardcoded upstream `1.2.1` value.
+- Step, distance, active calorie, and total calorie exports now include Health
+  Connect source package/app metadata when Health Connect exposes it.
+- Steps, distance, active calories, and total calories now resend full local-day
+  windows instead of partial "since last sync" totals, so daily dashboards can
+  replace the stored day value safely.
 
 ## Install Notes
 
@@ -32,10 +37,12 @@ and grant Health Connect permissions again.
 Before uninstalling, save your webhook URL and any custom headers.
 
 Download archive:
-[`downloads/life-dashboard-companion-1.2.2-wayne.1-release.zip`](downloads/life-dashboard-companion-1.2.2-wayne.1-release.zip)
+[`downloads/life-dashboard-companion-1.2.2-wayne.2-release.zip`](downloads/life-dashboard-companion-1.2.2-wayne.2-release.zip)
 
-SHA-256:
-`7612317317cb902f7202248a090cb28f7c4e9b48e7c577a79c2f54c146b91490`
+SHA-256 will be listed beside the published archive.
+
+APK SHA-256:
+`099d85f72375c6912af9e9b349fa4431761304c6ab4ff607ab8078166ade3cba`
 
 ## Attribution
 

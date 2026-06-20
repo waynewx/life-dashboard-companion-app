@@ -5,7 +5,6 @@ import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.HealthConnectFeatures
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.*
-import androidx.health.connect.client.request.AggregateRequest
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
 import java.time.Duration
@@ -66,10 +65,16 @@ data class HealthData(
     val hrv: List<HrvData>
 )
 
+data class HealthRecordSource(
+    val packageName: String?,
+    val appName: String?
+)
+
 data class StepsData(
     val count: Long,
     val startTime: Instant,
-    val endTime: Instant
+    val endTime: Instant,
+    val source: HealthRecordSource?
 )
 
 data class SleepData(
@@ -93,19 +98,22 @@ data class HeartRateData(
 data class DistanceData(
     val meters: Double,
     val startTime: Instant,
-    val endTime: Instant
+    val endTime: Instant,
+    val source: HealthRecordSource?
 )
 
 data class ActiveCaloriesData(
     val calories: Double,
     val startTime: Instant,
-    val endTime: Instant
+    val endTime: Instant,
+    val source: HealthRecordSource?
 )
 
 data class TotalCaloriesData(
     val calories: Double,
     val startTime: Instant,
-    val endTime: Instant
+    val endTime: Instant,
+    val source: HealthRecordSource?
 )
 
 data class WeightData(
@@ -303,27 +311,16 @@ class HealthConnectManager(private val context: Context) {
         endTime: Instant,
         lastSync: Instant?
     ): List<StepsData> {
-        val effectiveStart = maxOf(startTime, lastSync ?: startTime)
-        if (!effectiveStart.isBefore(endTime)) return emptyList()
-
-        return localDayWindows(effectiveStart, endTime).mapNotNull { (windowStart, windowEnd) ->
-            val response = healthConnectClient.aggregate(
-                AggregateRequest(
-                    metrics = setOf(StepsRecord.COUNT_TOTAL),
-                    timeRangeFilter = TimeRangeFilter.between(windowStart, windowEnd)
-                )
-            )
-            val count = response[StepsRecord.COUNT_TOTAL] ?: 0L
-            if (count > 0L) {
-                StepsData(
-                    count = count,
-                    startTime = windowStart,
-                    endTime = windowEnd
-                )
-            } else {
-                null
+        return readRecordsPaged(StepsRecord::class, startTime, endTime)
+            .filter { it.count > 0L }
+            .groupDailyBySource(
+                start = { it.startTime },
+                end = { it.endTime },
+                source = { sourceForRecord(it) },
+                value = { it.count.toDouble() }
+            ) { count, bucketStart, bucketEnd, source ->
+                StepsData(Math.round(count), bucketStart, bucketEnd, source)
             }
-        }
     }
 
     private suspend fun readSleepData(
@@ -363,54 +360,82 @@ class HealthConnectManager(private val context: Context) {
     }
 
     private suspend fun readDistanceData(startTime: Instant, endTime: Instant, lastSync: Instant?): List<DistanceData> {
-        val effectiveStart = maxOf(startTime, lastSync ?: startTime)
-        if (!effectiveStart.isBefore(endTime)) return emptyList()
-
-        return localDayWindows(effectiveStart, endTime).mapNotNull { (windowStart, windowEnd) ->
-            val response = healthConnectClient.aggregate(
-                AggregateRequest(
-                    metrics = setOf(DistanceRecord.DISTANCE_TOTAL),
-                    timeRangeFilter = TimeRangeFilter.between(windowStart, windowEnd)
-                )
-            )
-            val meters = response[DistanceRecord.DISTANCE_TOTAL]?.inMeters ?: 0.0
-            if (meters > 0.0) {
-                DistanceData(meters, windowStart, windowEnd)
-            } else {
-                null
+        return readRecordsPaged(DistanceRecord::class, startTime, endTime)
+            .filter { it.distance.inMeters > 0.0 }
+            .groupDailyBySource(
+                start = { it.startTime },
+                end = { it.endTime },
+                source = { sourceForRecord(it) },
+                value = { it.distance.inMeters }
+            ) { meters, bucketStart, bucketEnd, source ->
+                DistanceData(meters, bucketStart, bucketEnd, source)
             }
-        }
-    }
-
-    private fun localDayWindows(startTime: Instant, endTime: Instant): List<Pair<Instant, Instant>> {
-        val zone = ZoneId.systemDefault()
-        val windows = mutableListOf<Pair<Instant, Instant>>()
-        var cursor = startTime
-
-        while (cursor.isBefore(endTime)) {
-            val nextDayStart = cursor.atZone(zone)
-                .toLocalDate()
-                .plusDays(1)
-                .atStartOfDay(zone)
-                .toInstant()
-            val windowEnd = minOf(nextDayStart, endTime)
-            windows.add(cursor to windowEnd)
-            cursor = windowEnd
-        }
-
-        return windows
     }
 
     private suspend fun readActiveCaloriesData(startTime: Instant, endTime: Instant, lastSync: Instant?): List<ActiveCaloriesData> {
         return readRecordsPaged(ActiveCaloriesBurnedRecord::class, startTime, endTime)
-            .filter { lastSync == null || it.endTime > lastSync }
-            .map { ActiveCaloriesData(it.energy.inKilocalories, it.startTime, it.endTime) }
+            .filter { it.energy.inKilocalories > 0.0 }
+            .map { ActiveCaloriesData(it.energy.inKilocalories, it.startTime, it.endTime, sourceForRecord(it)) }
     }
 
     private suspend fun readTotalCaloriesData(startTime: Instant, endTime: Instant, lastSync: Instant?): List<TotalCaloriesData> {
         return readRecordsPaged(TotalCaloriesBurnedRecord::class, startTime, endTime)
-            .filter { lastSync == null || it.endTime > lastSync }
-            .map { TotalCaloriesData(it.energy.inKilocalories, it.startTime, it.endTime) }
+            .filter { it.energy.inKilocalories > 0.0 }
+            .map { TotalCaloriesData(it.energy.inKilocalories, it.startTime, it.endTime, sourceForRecord(it)) }
+    }
+
+    private data class DailySourceBucket(
+        var total: Double,
+        var startTime: Instant,
+        var endTime: Instant,
+        val source: HealthRecordSource?
+    )
+
+    private fun localDateKey(time: Instant): String {
+        return time.atZone(ZoneId.systemDefault()).toLocalDate().toString()
+    }
+
+    private fun sourceKey(source: HealthRecordSource?): String {
+        return source?.packageName ?: "unknown"
+    }
+
+    private fun sourceForRecord(record: Record): HealthRecordSource? {
+        val packageName = record.metadata.dataOrigin.packageName.takeIf { it.isNotBlank() }
+        val appName = packageName?.let { appNameForPackage(it) }
+        return if (packageName == null && appName == null) null else HealthRecordSource(packageName, appName)
+    }
+
+    private fun appNameForPackage(packageName: String): String? {
+        return try {
+            @Suppress("DEPRECATION")
+            val appInfo = context.packageManager.getApplicationInfo(packageName, 0)
+            context.packageManager.getApplicationLabel(appInfo).toString()
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun <T : Record, R> List<T>.groupDailyBySource(
+        start: (T) -> Instant,
+        end: (T) -> Instant,
+        source: (T) -> HealthRecordSource?,
+        value: (T) -> Double,
+        build: (Double, Instant, Instant, HealthRecordSource?) -> R
+    ): List<R> {
+        val buckets = linkedMapOf<String, DailySourceBucket>()
+        for (record in this) {
+            val recordSource = source(record)
+            val key = "${localDateKey(end(record))}::${sourceKey(recordSource)}"
+            val bucket = buckets.getOrPut(key) {
+                DailySourceBucket(0.0, start(record), end(record), recordSource)
+            }
+            bucket.total += value(record)
+            if (start(record).isBefore(bucket.startTime)) bucket.startTime = start(record)
+            if (end(record).isAfter(bucket.endTime)) bucket.endTime = end(record)
+        }
+        return buckets.values
+            .filter { it.total > 0.0 }
+            .map { build(it.total, it.startTime, it.endTime, it.source) }
     }
 
     private suspend fun readWeightData(startTime: Instant, endTime: Instant, lastSync: Instant?): List<WeightData> {
