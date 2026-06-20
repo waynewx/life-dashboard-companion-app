@@ -14,6 +14,12 @@ This fork adds a focused Health Connect fix for stale or missing Steps/Distance
 exports on transferred devices or partial permission states. See
 [`FORK_NOTICE.md`](FORK_NOTICE.md) for the exact changes and installation caveat.
 
+Download Wayne's fixed build:
+[`life-dashboard-companion-1.2.2-wayne.1-release.zip`](downloads/life-dashboard-companion-1.2.2-wayne.1-release.zip)
+
+The ZIP contains the signed APK, release notes, attribution notice, and patch
+file for this fork.
+
 <p align="center">
   <img src="docs/screenshots/health-connect.png" width="250" alt="Health Connect Screen">
   <img src="docs/screenshots/screen-time.png" width="250" alt="Screen Time Screen">
@@ -75,9 +81,19 @@ A privacy-focused Android app that syncs your **Health Connect** and **Screen Ti
 
 ## Installation
 
-### From Releases (Recommended)
-1. Download the latest APK from [Releases](https://github.com/owen282000/life-dashboard-companion-app/releases/latest)
-2. Install on your Android device (enable "Install from unknown sources" if needed)
+### Wayne Fix Build
+1. Download
+   [`life-dashboard-companion-1.2.2-wayne.1-release.zip`](downloads/life-dashboard-companion-1.2.2-wayne.1-release.zip).
+2. Extract the ZIP and install the APK on your Android device.
+3. Save your webhook URL and custom headers before uninstalling the upstream
+   app. This build uses the same package name but a different signing key, so
+   Android will not install it over the upstream GitHub release.
+4. Reopen the app and grant Health Connect permissions fresh, including Steps
+   and Distance.
+
+### Upstream Releases
+For the original unmodified app, download the latest APK from
+[upstream releases](https://github.com/owen282000/life-dashboard-companion-app/releases/latest).
 
 ### Build from Source
 ```bash

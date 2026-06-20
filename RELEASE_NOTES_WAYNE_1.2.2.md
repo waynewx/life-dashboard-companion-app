@@ -31,6 +31,12 @@ and grant Health Connect permissions again.
 
 Before uninstalling, save your webhook URL and any custom headers.
 
+Download archive:
+[`downloads/life-dashboard-companion-1.2.2-wayne.1-release.zip`](downloads/life-dashboard-companion-1.2.2-wayne.1-release.zip)
+
+SHA-256:
+`7612317317cb902f7202248a090cb28f7c4e9b48e7c577a79c2f54c146b91490`
+
 ## Attribution
 
 Original project:
