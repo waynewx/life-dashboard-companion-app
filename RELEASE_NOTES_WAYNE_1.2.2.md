@@ -57,7 +57,7 @@ and grant Health Connect permissions again.
 Before uninstalling, save your webhook URL and any custom headers.
 
 Download APK:
-[`downloads/life-dashboard-companion-1.2.2-wayne.4-release.apk`](downloads/life-dashboard-companion-1.2.2-wayne.4-release.apk)
+[`life-dashboard-companion-1.2.2-wayne.4-release.apk`](https://github.com/waynewx/life-dashboard-companion-app/releases/download/v1.2.2-wayne.4/life-dashboard-companion-1.2.2-wayne.4-release.apk)
 
 APK SHA-256:
 `5d16f0ba3dd5342fba4d5cdd52879a19b28c5ba547c8089e9012afef534c1fad`

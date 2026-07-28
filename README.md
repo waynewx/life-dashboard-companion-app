@@ -1,6 +1,6 @@
 # Life Dashboard Companion
 
-[![Download APK](https://img.shields.io/github/v/release/owen282000/life-dashboard-companion-app?label=Download%20APK)](https://github.com/owen282000/life-dashboard-companion-app/releases/latest)
+[![Download APK](https://img.shields.io/github/v/release/waynewx/life-dashboard-companion-app?label=Download%20APK)](https://github.com/waynewx/life-dashboard-companion-app/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Android](https://img.shields.io/badge/Android-14%2B-green.svg)](https://developer.android.com)
 
@@ -15,10 +15,10 @@ exports on transferred devices or partial permission states. See
 [`FORK_NOTICE.md`](FORK_NOTICE.md) for the exact changes and installation caveat.
 
 Download Wayne's fixed build:
-[`life-dashboard-companion-1.2.2-wayne.1-release.zip`](downloads/life-dashboard-companion-1.2.2-wayne.1-release.zip)
+[`life-dashboard-companion-1.2.2-wayne.4-release.apk`](https://github.com/waynewx/life-dashboard-companion-app/releases/download/v1.2.2-wayne.4/life-dashboard-companion-1.2.2-wayne.4-release.apk)
 
-The ZIP contains the signed APK, release notes, attribution notice, and patch
-file for this fork.
+The APK is signed with Wayne's personal release key and can update prior Wayne
+builds in place.
 
 <p align="center">
   <img src="docs/screenshots/health-connect.png" width="250" alt="Health Connect Screen">
@@ -83,8 +83,8 @@ A privacy-focused Android app that syncs your **Health Connect** and **Screen Ti
 
 ### Wayne Fix Build
 1. Download
-   [`life-dashboard-companion-1.2.2-wayne.1-release.zip`](downloads/life-dashboard-companion-1.2.2-wayne.1-release.zip).
-2. Extract the ZIP and install the APK on your Android device.
+   [`life-dashboard-companion-1.2.2-wayne.4-release.apk`](https://github.com/waynewx/life-dashboard-companion-app/releases/download/v1.2.2-wayne.4/life-dashboard-companion-1.2.2-wayne.4-release.apk).
+2. Install the APK on your Android device.
 3. Save your webhook URL and custom headers before uninstalling the upstream
    app. This build uses the same package name but a different signing key, so
    Android will not install it over the upstream GitHub release.
