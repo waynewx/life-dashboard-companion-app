@@ -9,6 +9,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import java.time.Instant
+import java.time.ZoneId
 
 class ScreenTimeSyncManager(private val context: Context) {
 
@@ -108,6 +109,7 @@ class ScreenTimeSyncManager(private val context: Context) {
             put("timestamp", Instant.now().toString())
             put("app_version", getAppVersion())
             put("device", "${Build.MANUFACTURER} ${Build.MODEL}")
+            put("timezone", ZoneId.systemDefault().id)
             put("source", "screen_time")
 
             putJsonArray("screen_time") {
@@ -123,6 +125,18 @@ class ScreenTimeSyncManager(private val context: Context) {
                                     put("name", app.appName)
                                     put("minutes", app.totalTimeMs / 60000)
                                     put("last_used", app.lastUsed.toString())
+                                })
+                            }
+                        }
+
+                        putJsonArray("sessions") {
+                            dayData.sessions.forEach { session ->
+                                add(buildJsonObject {
+                                    put("package", session.packageName)
+                                    put("name", session.appName)
+                                    put("start_time", session.startTime.toString())
+                                    put("end_time", session.endTime.toString())
+                                    put("duration_seconds", session.durationMs / 1000)
                                 })
                             }
                         }

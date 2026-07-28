@@ -489,36 +489,29 @@ fun ScreenTimeScreen() {
                     onClick = {
                         if (isSyncing) return@Button
 
-                        scope.launch {
-                            isSyncing = true
-                            syncMessage = null
+                        isSyncing = true
+                        syncMessage = null
 
-                            try {
-                                if (!screenTimeManager.hasPermission()) {
-                                    syncMessage = "Permission not granted"
-                                    val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
-                                    context.startActivity(intent)
-                                    isSyncing = false
-                                    return@launch
-                                }
+                        if (!screenTimeManager.hasPermission()) {
+                            syncMessage = "Permission not granted"
+                            val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
+                            context.startActivity(intent)
+                            isSyncing = false
+                            return@Button
+                        }
 
-                                val syncManager = ScreenTimeSyncManager(context)
-                                val result = syncManager.performSync()
-
-                                syncMessage = when {
-                                    result.isSuccess -> {
-                                        when (val syncResult = result.getOrThrow()) {
-                                            is ScreenTimeSyncResult.NoData -> "No new data"
-                                            is ScreenTimeSyncResult.Success -> "Synced ${syncResult.appCount} apps"
-                                        }
+                        val application = context.applicationContext as LifeDashboardApplication
+                        application.performManualScreenTimeSync { result ->
+                            syncMessage = when {
+                                result.isSuccess -> {
+                                    when (val syncResult = result.getOrThrow()) {
+                                        is ScreenTimeSyncResult.NoData -> "No new data"
+                                        is ScreenTimeSyncResult.Success -> "Synced ${syncResult.appCount} apps"
                                     }
-                                    else -> "Failed: ${result.exceptionOrNull()?.message}"
                                 }
-                            } catch (e: Exception) {
-                                syncMessage = "Failed: ${e.message}"
-                            } finally {
-                                isSyncing = false
+                                else -> "Failed: ${result.exceptionOrNull()?.message}"
                             }
+                            isSyncing = false
                         }
                     },
                     enabled = !isSyncing && webhookUrls.isNotEmpty() && hasPermission,

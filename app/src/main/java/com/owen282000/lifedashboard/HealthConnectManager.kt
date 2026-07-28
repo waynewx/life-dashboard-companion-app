@@ -357,6 +357,15 @@ class HealthConnectManager(private val context: Context) {
                     .filter { lastSync == null || it.time > lastSync }
                     .map { HeartRateData(it.beatsPerMinute, it.time) }
             }
+            .groupBy { it.time.epochSecond / HEART_RATE_BUCKET_SECONDS }
+            .values
+            .map { samples ->
+                HeartRateData(
+                    bpm = samples.map { it.bpm }.average().toLong(),
+                    time = samples.maxOf { it.time }
+                )
+            }
+            .sortedBy { it.time }
     }
 
     private suspend fun readDistanceData(startTime: Instant, endTime: Instant, lastSync: Instant?): List<DistanceData> {
@@ -622,6 +631,7 @@ class HealthConnectManager(private val context: Context) {
     companion object {
         private const val LOOKBACK_HOURS = 168L  // 7 days
         private const val READ_PAGE_SIZE = 1000
+        private const val HEART_RATE_BUCKET_SECONDS = 60L
 
         fun getPermissionsForTypes(types: Set<HealthDataType>): Set<String> {
             val permissions = getReadPermissionsForTypes(types).toMutableSet()

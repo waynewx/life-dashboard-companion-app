@@ -18,7 +18,8 @@ import java.util.concurrent.TimeUnit
 data class ScreenTimeData(
     val date: LocalDate,
     val totalScreenTimeMs: Long,
-    val apps: List<AppUsageData>
+    val apps: List<AppUsageData>,
+    val sessions: List<AppUsageSessionData> = emptyList()
 )
 
 data class AppUsageData(
@@ -26,6 +27,14 @@ data class AppUsageData(
     val appName: String,
     val totalTimeMs: Long,
     val lastUsed: Instant
+)
+
+data class AppUsageSessionData(
+    val packageName: String,
+    val appName: String,
+    val startTime: Instant,
+    val endTime: Instant,
+    val durationMs: Long
 )
 
 class ScreenTimeManager(
@@ -131,6 +140,8 @@ class ScreenTimeManager(
                 val appForegroundTime = mutableMapOf<String, Long>()
                 val appLastUsed = mutableMapOf<String, Long>()
                 val foregroundStartTimes = mutableMapOf<String, Long>()
+                val appNameCache = mutableMapOf<String, String>()
+                val sessions = mutableListOf<AppUsageSessionData>()
 
                 // Process today's events only - don't check previous day as it causes issues
                 val usageEvents = usageStatsManager.queryEvents(dayStart, dayEnd)
@@ -154,10 +165,23 @@ class ScreenTimeManager(
                             if (startTime != null) {
                                 // Use max of startTime and dayStart to avoid counting previous day
                                 val effectiveStart = maxOf(startTime, dayStart)
-                                val duration = event.timeStamp - effectiveStart
+                                val effectiveEnd = minOf(event.timeStamp, dayEnd)
+                                val duration = effectiveEnd - effectiveStart
                                 if (duration > 0) {
                                     appForegroundTime[packageName] =
                                         (appForegroundTime[packageName] ?: 0L) + duration
+                                    if (duration >= 5000L) {
+                                        val appName = appNameCache.getOrPut(packageName) { getAppName(packageName) }
+                                        sessions.add(
+                                            AppUsageSessionData(
+                                                packageName = packageName,
+                                                appName = appName,
+                                                startTime = Instant.ofEpochMilli(effectiveStart),
+                                                endTime = Instant.ofEpochMilli(effectiveEnd),
+                                                durationMs = duration
+                                            )
+                                        )
+                                    }
                                 }
                             }
                             appLastUsed[packageName] = event.timeStamp
@@ -174,6 +198,18 @@ class ScreenTimeManager(
                         val duration = endTime - effectiveStart
                         appForegroundTime[packageName] =
                             (appForegroundTime[packageName] ?: 0L) + duration
+                        if (duration >= 5000L) {
+                            val appName = appNameCache.getOrPut(packageName) { getAppName(packageName) }
+                            sessions.add(
+                                AppUsageSessionData(
+                                    packageName = packageName,
+                                    appName = appName,
+                                    startTime = Instant.ofEpochMilli(effectiveStart),
+                                    endTime = Instant.ofEpochMilli(endTime),
+                                    durationMs = duration
+                                )
+                            )
+                        }
                     }
                 }
 
@@ -183,7 +219,7 @@ class ScreenTimeManager(
                     .map { (packageName, totalTime) ->
                         AppUsageData(
                             packageName = packageName,
-                            appName = getAppName(packageName),
+                            appName = appNameCache.getOrPut(packageName) { getAppName(packageName) },
                             totalTimeMs = totalTime,
                             lastUsed = Instant.ofEpochMilli(appLastUsed[packageName] ?: dayEnd)
                         )
@@ -196,7 +232,8 @@ class ScreenTimeManager(
                         ScreenTimeData(
                             date = targetDate,
                             totalScreenTimeMs = totalScreenTime,
-                            apps = appUsageList
+                            apps = appUsageList,
+                            sessions = sessions.sortedBy { it.startTime }
                         )
                     )
                 }

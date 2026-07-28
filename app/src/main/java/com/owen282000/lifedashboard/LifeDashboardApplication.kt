@@ -4,11 +4,17 @@ import android.app.Application
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 
 class LifeDashboardApplication : Application() {
 
     private lateinit var preferencesManager: PreferencesManager
+    private val manualSyncScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onCreate() {
         super.onCreate()
@@ -47,5 +53,23 @@ class LifeDashboardApplication : Application() {
             ExistingPeriodicWorkPolicy.UPDATE,
             syncWorkRequest
         )
+    }
+
+    fun performManualHealthSync(onComplete: (Result<HealthSyncResult>) -> Unit) {
+        manualSyncScope.launch {
+            val result = HealthSyncManager(this@LifeDashboardApplication).performSync()
+            withContext(Dispatchers.Main.immediate) {
+                onComplete(result)
+            }
+        }
+    }
+
+    fun performManualScreenTimeSync(onComplete: (Result<ScreenTimeSyncResult>) -> Unit) {
+        manualSyncScope.launch {
+            val result = ScreenTimeSyncManager(this@LifeDashboardApplication).performSync()
+            withContext(Dispatchers.Main.immediate) {
+                onComplete(result)
+            }
+        }
     }
 }

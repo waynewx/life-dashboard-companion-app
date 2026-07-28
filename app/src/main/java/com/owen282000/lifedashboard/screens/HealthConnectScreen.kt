@@ -579,6 +579,7 @@ fun HealthConnectScreen(
                         scope.launch {
                             isSyncing = true
                             syncMessage = null
+                            var syncHandedOff = false
                             try {
                                 val availability = HealthConnectClient.getSdkStatus(context)
                                 if (availability != HealthConnectClient.SDK_AVAILABLE) {
@@ -604,28 +605,34 @@ fun HealthConnectScreen(
                                 preferencesManager.setHealthEnabledDataTypes(enabledDataTypes)
                                 preferencesManager.setHealthWebhookHeaders(webhookHeaders)
 
-                                val syncManager = HealthSyncManager(context)
-                                val result = syncManager.performSync()
-
-                                syncMessage = when {
-                                    result.isSuccess -> {
-                                        when (val syncResult = result.getOrThrow()) {
-                                            is HealthSyncResult.NoData -> "No new data"
-                                            is HealthSyncResult.Success -> "Synced ${syncResult.syncCounts.values.sum()} records"
+                                val application = context.applicationContext as LifeDashboardApplication
+                                application.performManualHealthSync { result ->
+                                    syncMessage = when {
+                                        result.isSuccess -> {
+                                            when (val syncResult = result.getOrThrow()) {
+                                                is HealthSyncResult.NoData -> "No new data"
+                                                is HealthSyncResult.Success -> "Synced ${syncResult.syncCounts.values.sum()} records"
+                                            }
                                         }
+                                        else -> "Failed: ${result.exceptionOrNull()?.message}"
                                     }
-                                    else -> "Failed: ${result.exceptionOrNull()?.message}"
+                                    isSyncing = false
                                 }
 
-                                // Update initial values so hasChanges reflects saved state
+                                // The application-owned sync survives navigation away from this tab.
+                                // Update saved-state tracking now; completion is delivered asynchronously.
                                 initialSyncInterval = currentInterval
                                 initialWebhookUrls = webhookUrls
                                 initialEnabledDataTypes = enabledDataTypes
                                 initialWebhookHeaders = webhookHeaders
+                                syncHandedOff = true
+                                return@launch
                             } catch (e: Exception) {
                                 syncMessage = "Failed: ${e.message}"
                             } finally {
-                                isSyncing = false
+                                if (!syncHandedOff) {
+                                    isSyncing = false
+                                }
                             }
                         }
                     },

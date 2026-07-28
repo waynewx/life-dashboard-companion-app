@@ -1,9 +1,29 @@
-# Life Dashboard Companion 1.2.2-wayne.2
+# Life Dashboard Companion 1.2.2-wayne.4
 
-Personal fix build for Health Connect Steps/Distance export issues seen on
-transferred devices or partial permission states.
+Personal Wayne build for reliable Screen Time and Health Connect catch-up sync.
 
-## Fixed
+## Fixed in 1.2.2-wayne.4
+
+- Manual uploads now run in an application-owned coroutine, so switching between
+  the Screen Time and Health Connect tabs no longer cancels an in-flight upload.
+- Heart-rate samples are reduced to one average sample per minute before JSON
+  serialisation, preventing multi-megabyte catch-up payloads such as the
+  116,265-record upload observed on 26 July 2026.
+- Webhook read/write timeout increased from 10 to 30 seconds to tolerate mobile
+  network and reverse-proxy latency without premature retries.
+- This APK is versionCode 8 and signed with Wayne's personal release key, so it
+  updates the prior `1.2.2-wayne.3` personal build in place.
+
+## Fixed in 1.2.2-wayne.3
+
+- Screen Time sync now includes foreground app sessions with start time, end
+  time, duration, app/package name, device, and timezone context.
+- Mission Control can use these sessions for hourly screen-time visualisation
+  and nightly pattern commentary.
+- This APK is versionCode 7 and signed with Wayne's personal release key, so it
+  updates the prior `1.2.2-wayne.2` personal build in place.
+
+## Fixed in 1.2.2-wayne.1 / 1.2.2-wayne.2
 
 - Data type rows now reflect the exact Health Connect read permission for that
   data type.
@@ -36,13 +56,11 @@ and grant Health Connect permissions again.
 
 Before uninstalling, save your webhook URL and any custom headers.
 
-Download archive:
-[`downloads/life-dashboard-companion-1.2.2-wayne.2-release.zip`](downloads/life-dashboard-companion-1.2.2-wayne.2-release.zip)
-
-SHA-256 will be listed beside the published archive.
+Download APK:
+[`downloads/life-dashboard-companion-1.2.2-wayne.4-release.apk`](downloads/life-dashboard-companion-1.2.2-wayne.4-release.apk)
 
 APK SHA-256:
-`099d85f72375c6912af9e9b349fa4431761304c6ab4ff607ab8078166ade3cba`
+`5d16f0ba3dd5342fba4d5cdd52879a19b28c5ba547c8089e9012afef534c1fad`
 
 ## Attribution
 
