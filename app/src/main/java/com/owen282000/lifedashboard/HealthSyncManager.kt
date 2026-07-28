@@ -26,7 +26,10 @@ class HealthSyncManager(private val context: Context) {
 
             val lastSyncTimestamps = enabledTypes.associateWith { type ->
                 preferencesManager.getHealthLastSyncTimestamp(type)?.let { Instant.ofEpochMilli(it) }
-            }
+            }.toMutableMap()
+            val exerciseBackfillNeeded =
+                HealthDataType.EXERCISE in enabledTypes && preferencesManager.needsExerciseMetadataBackfill()
+            if (exerciseBackfillNeeded) lastSyncTimestamps[HealthDataType.EXERCISE] = null
 
             val healthDataResult = healthConnectManager.readHealthData(enabledTypes, lastSyncTimestamps)
             if (healthDataResult.isFailure) {
@@ -66,7 +69,10 @@ class HealthSyncManager(private val context: Context) {
             // Get last sync timestamps for all enabled types
             val lastSyncTimestamps = enabledTypes.associateWith { type ->
                 preferencesManager.getHealthLastSyncTimestamp(type)?.let { Instant.ofEpochMilli(it) }
-            }
+            }.toMutableMap()
+            val exerciseBackfillNeeded =
+                HealthDataType.EXERCISE in enabledTypes && preferencesManager.needsExerciseMetadataBackfill()
+            if (exerciseBackfillNeeded) lastSyncTimestamps[HealthDataType.EXERCISE] = null
 
             // Read health data
             val healthDataResult = healthConnectManager.readHealthData(enabledTypes, lastSyncTimestamps)
@@ -112,6 +118,7 @@ class HealthSyncManager(private val context: Context) {
             // Update last sync timestamps
             val syncCounts = mutableMapOf<HealthDataType, Int>()
             updateSyncTimestamps(healthData, syncCounts)
+            if (exerciseBackfillNeeded) preferencesManager.markExerciseMetadataBackfillComplete()
 
             Result.success(HealthSyncResult.Success(syncCounts))
         } catch (e: Exception) {

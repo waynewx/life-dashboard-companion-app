@@ -64,15 +64,16 @@ class WebhookManager(
             var lastException: Exception? = null
             for (attempt in 1..MAX_RETRIES) {
                 try {
-                    val response = client.newCall(request).execute()
-                    statusCode = response.code
-                    if (response.isSuccessful) {
-                        success = true
-                        logWebhookCall(url, timestamp, statusCode, true, null, jsonPayload)
-                        return Result.success(Unit)
-                    } else {
-                        lastException = IOException("HTTP ${response.code}: ${response.message}")
-                        errorMessage = "HTTP ${response.code}: ${response.message}"
+                    client.newCall(request).execute().use { response ->
+                        statusCode = response.code
+                        if (response.isSuccessful) {
+                            success = true
+                            logWebhookCall(url, timestamp, statusCode, true, null, jsonPayload)
+                            return Result.success(Unit)
+                        } else {
+                            lastException = IOException("HTTP ${response.code}: ${response.message}")
+                            errorMessage = "HTTP ${response.code}: ${response.message}"
+                        }
                     }
                 } catch (e: IOException) {
                     lastException = e
@@ -116,7 +117,7 @@ class WebhookManager(
                 rawPayload = rawPayload,
                 logType = logType.name
             )
-            preferencesManager.addWebhookLog(log)
+            runCatching { preferencesManager.addWebhookLog(log) }
         }
     }
 

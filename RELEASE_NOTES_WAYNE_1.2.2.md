@@ -1,6 +1,21 @@
-# Life Dashboard Companion 1.2.2-wayne.5
+# Life Dashboard Companion 1.2.2-wayne.6
 
 Personal Wayne build for reliable Screen Time and Health Connect catch-up sync.
+
+## Fixed in 1.2.2-wayne.6
+
+- Fixed the post-upload crash seen after `wayne.5` successfully sent Health
+  Connect data to Mission Control.
+- Exercise metadata backfill now runs once after upgrade instead of resending
+  the complete seven-day session window on every sync.
+- Local webhook history is bounded and raw payloads are truncated, preventing
+  repeated large syncs from exhausting app memory through SharedPreferences.
+- HTTP response bodies are always closed and local diagnostic logging can no
+  longer fail an otherwise successful sync.
+- Manual sync completion is guarded so a stale UI callback cannot terminate the
+  application process.
+- This APK is versionCode 10 and signed with Wayne's personal release key, so it
+  updates the prior `1.2.2-wayne.5` personal build in place.
 
 ## Fixed in 1.2.2-wayne.5
 
@@ -69,10 +84,10 @@ and grant Health Connect permissions again.
 Before uninstalling, save your webhook URL and any custom headers.
 
 Download APK:
-[`life-dashboard-companion-1.2.2-wayne.5-release.apk`](https://github.com/waynewx/life-dashboard-companion-app/releases/download/v1.2.2-wayne.5/life-dashboard-companion-1.2.2-wayne.5-release.apk)
+[`life-dashboard-companion-1.2.2-wayne.6-release.apk`](https://github.com/waynewx/life-dashboard-companion-app/releases/download/v1.2.2-wayne.6/life-dashboard-companion-1.2.2-wayne.6-release.apk)
 
 APK SHA-256:
-`036c3ec121d3265895186145bdd6e5936dfca8051e8060adaca18b680c53402c`
+`b233cf594ab9232fd3971a44b918756431eebfc96846f8601656b4fea6a34819`
 
 ## Attribution
 

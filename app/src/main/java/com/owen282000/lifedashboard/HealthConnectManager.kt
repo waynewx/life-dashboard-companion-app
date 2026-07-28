@@ -503,10 +503,8 @@ class HealthConnectManager(private val context: Context) {
     }
 
     private suspend fun readExerciseData(startTime: Instant, endTime: Instant, lastSync: Instant?): List<ExerciseData> {
-        // Re-read the full lookback window so an upgraded app can enrich sessions that were
-        // previously uploaded without metadata. The server uses stable start/end/source IDs,
-        // making these safe idempotent upserts.
         val sessions = readRecordsPaged(ExerciseSessionRecord::class, startTime, endTime)
+            .filter { lastSync == null || it.endTime > lastSync }
         if (sessions.isEmpty()) return emptyList()
 
         val distanceRecords = try {

@@ -17,6 +17,7 @@ class PreferencesManager(context: Context) {
         private const val KEY_HEALTH_SYNC_INTERVAL_MINUTES = "health_sync_interval_minutes"
         private const val KEY_HEALTH_WEBHOOK_URLS = "health_webhook_urls"
         private const val KEY_HEALTH_ENABLED_DATA_TYPES = "health_enabled_data_types"
+        private const val KEY_HEALTH_EXERCISE_METADATA_BACKFILL_VERSION = "health_exercise_metadata_backfill_version"
 
         // Screen Time keys
         private const val KEY_SCREENTIME_LAST_SYNC_TS = "screentime_last_sync_ts"
@@ -35,7 +36,10 @@ class PreferencesManager(context: Context) {
         // Defaults
         private const val DEFAULT_SYNC_INTERVAL_MINUTES = 60
         private const val DEFAULT_DAY_BOUNDARY_HOUR = 4
-        private const val MAX_LOGS = 100
+        private const val MAX_LOGS = 50
+        private const val MAX_STORED_LOG_JSON_CHARS = 1_000_000
+        private const val MAX_RAW_PAYLOAD_CHARS = 16_384
+        private const val EXERCISE_METADATA_BACKFILL_VERSION = 1
     }
 
     // ==================== Health Connect Settings ====================
@@ -81,6 +85,16 @@ class PreferencesManager(context: Context) {
 
     fun setHealthLastSyncTimestamp(type: HealthDataType, timestamp: Long) {
         prefs.edit().putLong(KEY_HEALTH_LAST_SYNC_TS_PREFIX + type.name, timestamp).apply()
+    }
+
+    fun needsExerciseMetadataBackfill(): Boolean {
+        return prefs.getInt(KEY_HEALTH_EXERCISE_METADATA_BACKFILL_VERSION, 0) < EXERCISE_METADATA_BACKFILL_VERSION
+    }
+
+    fun markExerciseMetadataBackfillComplete() {
+        prefs.edit()
+            .putInt(KEY_HEALTH_EXERCISE_METADATA_BACKFILL_VERSION, EXERCISE_METADATA_BACKFILL_VERSION)
+            .apply()
     }
 
     fun getHealthWebhookHeaders(): Map<String, String> {
@@ -160,6 +174,10 @@ class PreferencesManager(context: Context) {
 
     fun getWebhookLogs(filterType: LogType? = null): List<WebhookLog> {
         val logsJson = prefs.getString(KEY_WEBHOOK_LOGS, null) ?: return emptyList()
+        if (logsJson.length > MAX_STORED_LOG_JSON_CHARS) {
+            prefs.edit().remove(KEY_WEBHOOK_LOGS).apply()
+            return emptyList()
+        }
         return try {
             val allLogs = Json.decodeFromString<List<WebhookLog>>(logsJson)
             if (filterType != null) {
@@ -174,7 +192,12 @@ class PreferencesManager(context: Context) {
 
     fun addWebhookLog(log: WebhookLog) {
         val currentLogs = getWebhookLogs().toMutableList()
-        currentLogs.add(0, log) // Add to beginning
+        currentLogs.add(0, log.copy(
+            rawPayload = log.rawPayload?.let { payload ->
+                if (payload.length <= MAX_RAW_PAYLOAD_CHARS) payload
+                else payload.take(MAX_RAW_PAYLOAD_CHARS) + "\n[truncated]"
+            }
+        )) // Add to beginning
 
         // Keep only the most recent MAX_LOGS entries
         val trimmedLogs = currentLogs.take(MAX_LOGS)

@@ -57,9 +57,13 @@ class LifeDashboardApplication : Application() {
 
     fun performManualHealthSync(onComplete: (Result<HealthSyncResult>) -> Unit) {
         manualSyncScope.launch {
-            val result = HealthSyncManager(this@LifeDashboardApplication).performSync()
+            val result = try {
+                HealthSyncManager(this@LifeDashboardApplication).performSync()
+            } catch (throwable: Throwable) {
+                Result.failure(Exception("Health sync failed safely: ${throwable.message}", throwable))
+            }
             withContext(Dispatchers.Main.immediate) {
-                onComplete(result)
+                runCatching { onComplete(result) }
             }
         }
     }

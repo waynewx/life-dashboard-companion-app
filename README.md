@@ -15,7 +15,7 @@ exports on transferred devices or partial permission states. See
 [`FORK_NOTICE.md`](FORK_NOTICE.md) for the exact changes and installation caveat.
 
 Download Wayne's fixed build:
-[`life-dashboard-companion-1.2.2-wayne.5-release.apk`](https://github.com/waynewx/life-dashboard-companion-app/releases/download/v1.2.2-wayne.5/life-dashboard-companion-1.2.2-wayne.5-release.apk)
+[`life-dashboard-companion-1.2.2-wayne.6-release.apk`](https://github.com/waynewx/life-dashboard-companion-app/releases/download/v1.2.2-wayne.6/life-dashboard-companion-1.2.2-wayne.6-release.apk)
 
 The APK is signed with Wayne's personal release key and can update prior Wayne
 builds in place.
@@ -83,7 +83,7 @@ A privacy-focused Android app that syncs your **Health Connect** and **Screen Ti
 
 ### Wayne Fix Build
 1. Download
-   [`life-dashboard-companion-1.2.2-wayne.5-release.apk`](https://github.com/waynewx/life-dashboard-companion-app/releases/download/v1.2.2-wayne.5/life-dashboard-companion-1.2.2-wayne.5-release.apk).
+   [`life-dashboard-companion-1.2.2-wayne.6-release.apk`](https://github.com/waynewx/life-dashboard-companion-app/releases/download/v1.2.2-wayne.6/life-dashboard-companion-1.2.2-wayne.6-release.apk).
 2. Install the APK on your Android device.
 3. Save your webhook URL and custom headers before uninstalling the upstream
    app. This build uses the same package name but a different signing key, so
