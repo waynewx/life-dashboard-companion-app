@@ -1,0 +1,31 @@
+name: Publish Wayne 1.2.2-wayne.6 release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/publish-wayne6-release.yml
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: v1.2.2-wayne.6
+      APK_PATH: downloads/life-dashboard-companion-1.2.2-wayne.6-release.apk
+      ZIP_PATH: downloads/life-dashboard-companion-1.2.2-wayne.6-android-download.zip
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Create release and upload signed builds
+        shell: bash
+        run: |
+          gh release create "$RELEASE_TAG" "$APK_PATH" "$ZIP_PATH" \
+            --verify-tag \
+            --title "Life Dashboard Companion 1.2.2-wayne.6" \
+            --notes-file RELEASE_NOTES_WAYNE_1.2.2.md
