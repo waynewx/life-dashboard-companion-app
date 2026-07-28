@@ -159,9 +159,16 @@ data class RestingHeartRateData(
 
 data class ExerciseData(
     val type: String,
+    val title: String?,
+    val notes: String?,
     val startTime: Instant,
     val endTime: Instant,
-    val duration: Duration
+    val duration: Duration,
+    val distanceMeters: Double?,
+    val calories: Double?,
+    val source: HealthRecordSource?,
+    val recordId: String?,
+    val clientRecordId: String?
 )
 
 data class HydrationData(
@@ -496,9 +503,72 @@ class HealthConnectManager(private val context: Context) {
     }
 
     private suspend fun readExerciseData(startTime: Instant, endTime: Instant, lastSync: Instant?): List<ExerciseData> {
-        return readRecordsPaged(ExerciseSessionRecord::class, startTime, endTime)
-            .filter { lastSync == null || it.endTime > lastSync }
-            .map { ExerciseData(it.exerciseType.toString(), it.startTime, it.endTime, Duration.between(it.startTime, it.endTime)) }
+        // Re-read the full lookback window so an upgraded app can enrich sessions that were
+        // previously uploaded without metadata. The server uses stable start/end/source IDs,
+        // making these safe idempotent upserts.
+        val sessions = readRecordsPaged(ExerciseSessionRecord::class, startTime, endTime)
+        if (sessions.isEmpty()) return emptyList()
+
+        val distanceRecords = try {
+            readRecordsPaged(DistanceRecord::class, startTime, endTime)
+        } catch (e: Exception) {
+            emptyList()
+        }
+        val calorieRecords = try {
+            readRecordsPaged(ActiveCaloriesBurnedRecord::class, startTime, endTime)
+        } catch (e: Exception) {
+            emptyList()
+        }
+
+        return sessions.map { session ->
+            val matchingDistance = distanceRecords.filter {
+                metricBelongsToSession(it.startTime, it.endTime, session.startTime, session.endTime)
+            }
+            val matchingCalories = calorieRecords.filter {
+                metricBelongsToSession(it.startTime, it.endTime, session.startTime, session.endTime)
+            }
+            val sessionSource = sourceForRecord(session)
+            val metricSource = (matchingCalories.asSequence().mapNotNull { sourceForRecord(it) } +
+                matchingDistance.asSequence().mapNotNull { sourceForRecord(it) })
+                .firstOrNull { it.packageName == sessionSource?.packageName }
+                ?: matchingCalories.firstNotNullOfOrNull { sourceForRecord(it) }
+                ?: matchingDistance.firstNotNullOfOrNull { sourceForRecord(it) }
+
+            ExerciseData(
+                type = session.exerciseType.toString(),
+                title = session.title,
+                notes = session.notes,
+                startTime = session.startTime,
+                endTime = session.endTime,
+                duration = Duration.between(session.startTime, session.endTime),
+                distanceMeters = matchingDistance.sumOf { it.distance.inMeters }.takeIf { it > 0.0 },
+                calories = matchingCalories.sumOf { it.energy.inKilocalories }.takeIf { it > 0.0 },
+                source = sessionSource ?: metricSource,
+                recordId = session.metadata.id.takeIf { it.isNotBlank() },
+                clientRecordId = session.metadata.clientRecordId?.takeIf { it.isNotBlank() }
+            )
+        }
+    }
+
+    private fun metricBelongsToSession(
+        metricStart: Instant,
+        metricEnd: Instant,
+        sessionStart: Instant,
+        sessionEnd: Instant
+    ): Boolean {
+        val overlapStart = if (metricStart.isAfter(sessionStart)) metricStart else sessionStart
+        val overlapEnd = if (metricEnd.isBefore(sessionEnd)) metricEnd else sessionEnd
+        if (!overlapEnd.isAfter(overlapStart)) return false
+
+        val metricSeconds = Duration.between(metricStart, metricEnd).seconds.coerceAtLeast(1)
+        val sessionSeconds = Duration.between(sessionStart, sessionEnd).seconds.coerceAtLeast(1)
+        val overlapSeconds = Duration.between(overlapStart, overlapEnd).seconds
+
+        // Reject broad daily aggregates that merely contain a short workout. Workout-scoped
+        // records normally overlap most of their own interval and are close to session length.
+        val overlapRatio = overlapSeconds.toDouble() / metricSeconds
+        val maximumScopedMetricSeconds = maxOf(sessionSeconds * 3, sessionSeconds + 30 * 60)
+        return overlapRatio >= 0.5 && metricSeconds <= maximumScopedMetricSeconds
     }
 
     private suspend fun readHydrationData(startTime: Instant, endTime: Instant, lastSync: Instant?): List<HydrationData> {

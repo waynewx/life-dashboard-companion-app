@@ -1,6 +1,18 @@
-# Life Dashboard Companion 1.2.2-wayne.4
+# Life Dashboard Companion 1.2.2-wayne.5
 
 Personal Wayne build for reliable Screen Time and Health Connect catch-up sync.
+
+## Fixed in 1.2.2-wayne.5
+
+- Exercise Sessions now export their Health Connect title, notes, source
+  package/app, stable record IDs, distance, and active calories.
+- Workout-scoped distance and active-calorie records are correlated with each
+  exercise by interval overlap. Broad daily aggregates are deliberately
+  excluded so a short workout cannot inherit an entire day's burn.
+- The full seven-day exercise window is resent after upgrades so previously
+  bare sessions can be enriched safely by the dashboard's idempotent upsert.
+- This APK is versionCode 9 and signed with Wayne's personal release key, so it
+  updates the prior `1.2.2-wayne.4` personal build in place.
 
 ## Fixed in 1.2.2-wayne.4
 
@@ -57,10 +69,10 @@ and grant Health Connect permissions again.
 Before uninstalling, save your webhook URL and any custom headers.
 
 Download APK:
-[`life-dashboard-companion-1.2.2-wayne.4-release.apk`](https://github.com/waynewx/life-dashboard-companion-app/releases/download/v1.2.2-wayne.4/life-dashboard-companion-1.2.2-wayne.4-release.apk)
+[`life-dashboard-companion-1.2.2-wayne.5-release.apk`](https://github.com/waynewx/life-dashboard-companion-app/releases/download/v1.2.2-wayne.5/life-dashboard-companion-1.2.2-wayne.5-release.apk)
 
 APK SHA-256:
-`5d16f0ba3dd5342fba4d5cdd52879a19b28c5ba547c8089e9012afef534c1fad`
+`036c3ec121d3265895186145bdd6e5936dfca8051e8060adaca18b680c53402c`
 
 ## Attribution
 

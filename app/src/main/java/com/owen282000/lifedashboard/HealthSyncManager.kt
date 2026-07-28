@@ -384,9 +384,16 @@ class HealthSyncManager(private val context: Context) {
                 putJsonArray("exercise") {
                     healthData.exercise.forEach { add(buildJsonObject {
                         put("type", it.type)
+                        it.title?.let { title -> put("title", title) }
+                        it.notes?.let { notes -> put("notes", notes) }
                         put("start_time", it.startTime.toString())
                         put("end_time", it.endTime.toString())
                         put("duration_seconds", it.duration.seconds)
+                        it.distanceMeters?.let { meters -> put("distance_meters", meters) }
+                        it.calories?.let { calories -> put("calories", calories) }
+                        it.recordId?.let { recordId -> put("record_id", recordId) }
+                        it.clientRecordId?.let { clientRecordId -> put("client_record_id", clientRecordId) }
+                        putSource(it.source)
                     }) }
                 }
             }
