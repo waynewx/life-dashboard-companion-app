@@ -1,0 +1,26 @@
+name: Publish Wayne 1.2.2-wayne.5 ZIP fallback
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/publish-wayne5-zip.yml
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: v1.2.2-wayne.5
+      ZIP_PATH: downloads/life-dashboard-companion-1.2.2-wayne.5-android-download.zip
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Upload ZIP fallback to existing release
+        shell: bash
+        run: gh release upload "$RELEASE_TAG" "$ZIP_PATH" --clobber
