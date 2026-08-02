@@ -33,6 +33,14 @@ Changes in `1.2.2-wayne.1` and `1.2.2-wayne.2`:
   calorie data so the receiving dashboard does not overwrite daily totals with
   partial post-sync fragments.
 
+Changes in `1.2.2-wayne.7`:
+
+- Recognise QZ Fitness exercise sessions by package origin.
+- Correlate QZ's session-scoped Total Calories and distance records with the
+  treadmill workout while rejecting broad or foreign-source aggregates.
+- Tell receiving webhooks whether exercise calories came from Active Calories or
+  Total Calories so downstream accounting can avoid double-counting.
+
 The package name is unchanged from upstream. If your installed app was signed by
 the upstream release key, uninstall the old app before installing this personal
 build, then re-enter webhook settings and grant permissions again.

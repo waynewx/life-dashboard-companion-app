@@ -166,10 +166,53 @@ data class ExerciseData(
     val duration: Duration,
     val distanceMeters: Double?,
     val calories: Double?,
+    val calorieSource: String?,
     val source: HealthRecordSource?,
     val recordId: String?,
     val clientRecordId: String?
 )
+
+internal data class WorkoutCalories(
+    val calories: Double,
+    val source: HealthRecordSource?,
+    val kind: String
+)
+
+internal fun resolveWorkoutCalories(
+    sessionSource: HealthRecordSource?,
+    activeCalories: List<ActiveCaloriesData>,
+    totalCalories: List<TotalCaloriesData>
+): WorkoutCalories? {
+    val sessionPackage = sessionSource?.packageName
+    val isQzWorkout = sessionPackage == QZ_FITNESS_PACKAGE
+
+    val eligibleActiveCalories = if (isQzWorkout) {
+        activeCalories.filter { it.source?.packageName == sessionPackage }
+    } else {
+        activeCalories
+    }
+    val activeTotal = eligibleActiveCalories.sumOf { it.calories }
+    if (activeTotal > 0.0) {
+        val source = eligibleActiveCalories.firstNotNullOfOrNull { it.source }
+        return WorkoutCalories(activeTotal, source, "active")
+    }
+
+    // QZ writes workout energy as TotalCaloriesBurnedRecord rather than
+    // ActiveCaloriesBurnedRecord. Accept only same-package, session-scoped totals so a
+    // broad phone/day total cannot be mistaken for this workout's expenditure.
+    if (isQzWorkout) {
+        val qzTotals = totalCalories.filter { it.source?.packageName == sessionPackage }
+        val total = qzTotals.sumOf { it.calories }
+        if (total > 0.0) {
+            val source = qzTotals.firstNotNullOfOrNull { it.source } ?: sessionSource
+            return WorkoutCalories(total, source, "total")
+        }
+    }
+
+    return null
+}
+
+internal const val QZ_FITNESS_PACKAGE = "org.cagnulen.qdomyoszwift"
 
 data class HydrationData(
     val liters: Double,
@@ -512,24 +555,43 @@ class HealthConnectManager(private val context: Context) {
         } catch (e: Exception) {
             emptyList()
         }
-        val calorieRecords = try {
+        val activeCalorieRecords = try {
             readRecordsPaged(ActiveCaloriesBurnedRecord::class, startTime, endTime)
+        } catch (e: Exception) {
+            emptyList()
+        }
+        val totalCalorieRecords = try {
+            readRecordsPaged(TotalCaloriesBurnedRecord::class, startTime, endTime)
         } catch (e: Exception) {
             emptyList()
         }
 
         return sessions.map { session ->
+            val sessionSource = sourceForRecord(session)
+            val sessionPackage = sessionSource?.packageName
+            val isQzWorkout = sessionPackage == QZ_FITNESS_PACKAGE
             val matchingDistance = distanceRecords.filter {
                 metricBelongsToSession(it.startTime, it.endTime, session.startTime, session.endTime)
+            }.filter {
+                !isQzWorkout || sourceForRecord(it)?.packageName == sessionPackage
             }
-            val matchingCalories = calorieRecords.filter {
+            val matchingActiveCalories = activeCalorieRecords.filter {
                 metricBelongsToSession(it.startTime, it.endTime, session.startTime, session.endTime)
+            }.map {
+                ActiveCaloriesData(it.energy.inKilocalories, it.startTime, it.endTime, sourceForRecord(it))
             }
-            val sessionSource = sourceForRecord(session)
-            val metricSource = (matchingCalories.asSequence().mapNotNull { sourceForRecord(it) } +
+            val matchingTotalCalories = totalCalorieRecords.filter {
+                metricBelongsToSession(it.startTime, it.endTime, session.startTime, session.endTime)
+            }.map {
+                TotalCaloriesData(it.energy.inKilocalories, it.startTime, it.endTime, sourceForRecord(it))
+            }
+            val workoutCalories = resolveWorkoutCalories(sessionSource, matchingActiveCalories, matchingTotalCalories)
+            val metricSource = (matchingActiveCalories.asSequence().mapNotNull { it.source } +
+                matchingTotalCalories.asSequence().mapNotNull { it.source } +
                 matchingDistance.asSequence().mapNotNull { sourceForRecord(it) })
                 .firstOrNull { it.packageName == sessionSource?.packageName }
-                ?: matchingCalories.firstNotNullOfOrNull { sourceForRecord(it) }
+                ?: matchingActiveCalories.firstNotNullOfOrNull { it.source }
+                ?: matchingTotalCalories.firstNotNullOfOrNull { it.source }
                 ?: matchingDistance.firstNotNullOfOrNull { sourceForRecord(it) }
 
             ExerciseData(
@@ -540,8 +602,9 @@ class HealthConnectManager(private val context: Context) {
                 endTime = session.endTime,
                 duration = Duration.between(session.startTime, session.endTime),
                 distanceMeters = matchingDistance.sumOf { it.distance.inMeters }.takeIf { it > 0.0 },
-                calories = matchingCalories.sumOf { it.energy.inKilocalories }.takeIf { it > 0.0 },
-                source = sessionSource ?: metricSource,
+                calories = workoutCalories?.calories,
+                calorieSource = workoutCalories?.kind,
+                source = sessionSource ?: workoutCalories?.source ?: metricSource,
                 recordId = session.metadata.id.takeIf { it.isNotBlank() },
                 clientRecordId = session.metadata.clientRecordId?.takeIf { it.isNotBlank() }
             )

@@ -13,8 +13,8 @@ android {
         applicationId = "com.owen282000.lifedashboard"
         minSdk = 26
         targetSdk = 34
-        versionCode = 10
-        versionName = "1.2.2-wayne.6"
+        versionCode = 11
+        versionName = "1.2.2-wayne.7"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

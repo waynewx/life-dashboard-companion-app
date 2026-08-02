@@ -1,6 +1,21 @@
-# Life Dashboard Companion 1.2.2-wayne.6
+# Life Dashboard Companion 1.2.2-wayne.7
 
 Personal Wayne build for reliable Screen Time and Health Connect catch-up sync.
+
+## Fixed in 1.2.2-wayne.7
+
+- QZ Fitness treadmill sessions now correlate their same-source Health Connect
+  `TotalCaloriesBurnedRecord` with the matching exercise session. QZ currently
+  writes workout energy as Total Calories rather than Active Calories.
+- QZ distance is restricted to records from the QZ package and the matching
+  workout interval, preventing overlapping records from another app being
+  attached to the treadmill session.
+- Exercise exports now identify whether workout calories came from an Active or
+  Total Calories record so Mission Control can count the session exactly once.
+- Preserves the bounded logs, one-time exercise backfill, closed HTTP responses,
+  and guarded callbacks introduced in `wayne.6`.
+- This APK is versionCode 11 and uses the same Wayne release certificate as
+  `wayne.6`, so it updates the installed personal build in place.
 
 ## Fixed in 1.2.2-wayne.6
 
@@ -76,18 +91,25 @@ Personal Wayne build for reliable Screen Time and Health Connect catch-up sync.
 This build keeps the upstream Android package name:
 `com.owen282000.lifedashboard`.
 
-Because it is signed with Wayne's personal signing key rather than the upstream
-release key, Android will not install it over the original GitHub release. To
-use it, uninstall the existing Life Dashboard app first, then install this APK
-and grant Health Connect permissions again.
+If `wayne.6` is installed, open the new APK and update it in place; the package
+and Wayne release certificate match. Android will not install this personal
+build over the original upstream-signed GitHub release. Only in that upstream
+case, uninstall the old app first, then install this APK and grant Health Connect
+permissions again.
 
 Before uninstalling, save your webhook URL and any custom headers.
 
-Download APK:
-[`life-dashboard-companion-1.2.2-wayne.6-release.apk`](https://github.com/waynewx/life-dashboard-companion-app/releases/download/v1.2.2-wayne.6/life-dashboard-companion-1.2.2-wayne.6-release.apk)
+Preferred Android ZIP download:
+[`life-dashboard-companion-1.2.2-wayne.7-android-download.zip`](https://github.com/waynewx/life-dashboard-companion-app/releases/download/v1.2.2-wayne.7/life-dashboard-companion-1.2.2-wayne.7-android-download.zip)
+
+Direct APK:
+[`life-dashboard-companion-1.2.2-wayne.7-release.apk`](https://github.com/waynewx/life-dashboard-companion-app/releases/download/v1.2.2-wayne.7/life-dashboard-companion-1.2.2-wayne.7-release.apk)
 
 APK SHA-256:
-`b233cf594ab9232fd3971a44b918756431eebfc96846f8601656b4fea6a34819`
+`c3de2cdefdca30f65453045bd6494e308e204dbb9911fc33d328fb6d6a1d4b8b`
+
+ZIP SHA-256:
+`f6eb24a8915abfaf31386dc86da83da96d73fbcc175243319cdfe527a9e3df1a`
 
 ## Attribution
 

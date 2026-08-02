@@ -398,6 +398,7 @@ class HealthSyncManager(private val context: Context) {
                         put("duration_seconds", it.duration.seconds)
                         it.distanceMeters?.let { meters -> put("distance_meters", meters) }
                         it.calories?.let { calories -> put("calories", calories) }
+                        it.calorieSource?.let { source -> put("calorie_source", source) }
                         it.recordId?.let { recordId -> put("record_id", recordId) }
                         it.clientRecordId?.let { clientRecordId -> put("client_record_id", clientRecordId) }
                         putSource(it.source)

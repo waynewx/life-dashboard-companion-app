@@ -15,10 +15,11 @@ exports on transferred devices or partial permission states. See
 [`FORK_NOTICE.md`](FORK_NOTICE.md) for the exact changes and installation caveat.
 
 Download Wayne's fixed build:
-[`life-dashboard-companion-1.2.2-wayne.6-release.apk`](https://github.com/waynewx/life-dashboard-companion-app/releases/download/v1.2.2-wayne.6/life-dashboard-companion-1.2.2-wayne.6-release.apk)
+[`life-dashboard-companion-1.2.2-wayne.7-android-download.zip`](https://github.com/waynewx/life-dashboard-companion-app/releases/download/v1.2.2-wayne.7/life-dashboard-companion-1.2.2-wayne.7-android-download.zip)
 
-The APK is signed with Wayne's personal release key and can update prior Wayne
-builds in place.
+The APK inside the ZIP is signed with Wayne's personal release key and can
+update prior Wayne builds in place. The ZIP avoids Android/browser finalisation
+stalls seen when downloading a raw APK directly.
 
 <p align="center">
   <img src="docs/screenshots/health-connect.png" width="250" alt="Health Connect Screen">
@@ -83,13 +84,14 @@ A privacy-focused Android app that syncs your **Health Connect** and **Screen Ti
 
 ### Wayne Fix Build
 1. Download
-   [`life-dashboard-companion-1.2.2-wayne.6-release.apk`](https://github.com/waynewx/life-dashboard-companion-app/releases/download/v1.2.2-wayne.6/life-dashboard-companion-1.2.2-wayne.6-release.apk).
+   [`life-dashboard-companion-1.2.2-wayne.7-android-download.zip`](https://github.com/waynewx/life-dashboard-companion-app/releases/download/v1.2.2-wayne.7/life-dashboard-companion-1.2.2-wayne.7-android-download.zip),
+   extract the APK, and open it.
 2. Install the APK on your Android device.
-3. Save your webhook URL and custom headers before uninstalling the upstream
-   app. This build uses the same package name but a different signing key, so
-   Android will not install it over the upstream GitHub release.
-4. Reopen the app and grant Health Connect permissions fresh, including Steps
-   and Distance.
+3. If a previous Wayne build is installed, update it in place. If the upstream
+   app is installed instead, save your webhook URL and custom headers, uninstall
+   it, and then install this personal build because the signing keys differ.
+4. Grant Health Connect permissions including Exercise Sessions, Distance, and
+   Total Calories so QZ treadmill workouts can be exported completely.
 
 ### Upstream Releases
 For the original unmodified app, download the latest APK from
